@@ -23,6 +23,9 @@ public class PlayerController : MonoBehaviour
         trail = gameObject.GetComponentInChildren<TrailRenderer>();
         trail.time = maxTrailTime;
     }
+    float circleSpeed = 10;
+    float circleSize = 1f;
+    float circleGrowSpeed = 0.001f;
 
     // Update is called once per frame
     private void Update()
@@ -41,6 +44,13 @@ public class PlayerController : MonoBehaviour
         {
             StartCoroutine(Bumble(5));
         }
+
+            float xPos = Mathf.Sin(circleSpeed) * circleSize;
+            float yPos = Mathf.Cos(circleSpeed) * circleSize;
+
+            //circleSize += circleGrowSpeed;
+
+            transform.position = new Vector3(xPos, yPos, transform.position.z);
     }
 
     private static Vector3 QuadraticCurve(Vector3 a, Vector3 b, Vector3 c, float t)
