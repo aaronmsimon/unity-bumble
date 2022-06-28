@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
 
     private Camera cam;
     private Vector3 targetPos;
+    private Quaternion targetRot;
 
     private TrailRenderer trail;
 
@@ -27,46 +28,57 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0) && currentState == State.Normal)
+        if (Input.GetMouseButtonDown(0))
         {
             Vector3 mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, -cam.transform.position.z);
             targetPos = cam.ScreenToWorldPoint(mousePos);
+            targetRot = Quaternion.identity;
         }
 
         //trail.enabled = Vector3.Distance(transform.position, targetPos) / speed <= maxTrailTime;
 
-        transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
+        if (currentState == State.Normal)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
+            transform.rotation = targetRot;
+        }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            StartCoroutine(Bumble(3f, .1f, .01f, .001f, .005f));
+            StartCoroutine(BumbleCircle(3f, .1f, .01f, 10f));
         }
-
     }
 
-    IEnumerator Bumble(float bumbleTime, float circleSize, float circleSizeVelocity, float circleVelocity, float circleAcceleration)
+    IEnumerator BumbleCircle(float bumbleTime, float circleSize, float growthRate, float bumbleSpeed)
     {
         currentState = State.Bumble;
 
         float endBumbleTime = Time.time + bumbleTime;
+        Vector3 startPos = transform.position;
         float xPos;
         float yPos;
-        Vector3 startPos = transform.position;
+        Vector3 dir;
+        Vector3 angle;
 
         while (Time.time < endBumbleTime)
         {
-            xPos = Mathf.Sin(Time.time * circleVelocity) * circleSize + startPos.x;
-            yPos = Mathf.Cos(Time.time * circleVelocity) * circleSize + startPos.y;
+            xPos = Mathf.Sin(Time.time * bumbleSpeed) * circleSize + startPos.x;
+            yPos = Mathf.Cos(Time.time * bumbleSpeed) * circleSize + startPos.y;
 
             transform.position = new Vector3(xPos, yPos, startPos.z);
 
-            circleSize += circleSizeVelocity;
-            circleVelocity += circleAcceleration;
+            dir = startPos - transform.position;
+            angle = Quaternion.FromToRotation(Vector3.up, new Vector3(dir.x, dir.y, 0)).eulerAngles;
+
+            transform.rotation = Quaternion.Euler(0, 0, angle.z);
+
+            circleSize += growthRate;
             
             yield return null;
         }
 
         targetPos = transform.position;
+        targetRot = Quaternion.identity;
         currentState = State.Normal;
     }
 
